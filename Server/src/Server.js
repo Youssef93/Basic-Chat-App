@@ -10,6 +10,8 @@ class Server {
         this.uiDirectory = config.uiDirectory;
         this.portNumber = config.portNumber
         this.dbURL = config.dbURL;
+        this.usersCollection = config.usersCollection;
+        this.chatsCollections = config.chatsCollection;
 
         server.listen(this.portNumber);
 
@@ -20,14 +22,30 @@ class Server {
         });
 
         io.on('connection', socket => {
-            returnData = {};
             console.log("socket connected");
+            socket.on('user login', userName => {
+                MongoClient.connect(this.dbURL, function(err, db) {
+                    if(err){
+                        throw err;
+                    }
 
-            socket.on('user login', userData => {
-                MongoClient.connect(this.dbURL, (error, db => {
-                    console.log("data base connected");
-                    socket.emit('validation', true);
-                }));
+                    console.log(db.databaseName);
+                    let usersCollection = db.collection(config.usersCollection, (error, collection) => {
+                        if(error){
+                            throw error;
+                        }
+
+                        let x = collection.findOne({"userName": userName}, (error, result) => {
+                            if(error){
+                                throw error;
+                            }
+
+                            
+                        });
+                    });
+
+                    db.close();
+                });
             });
         });
     }

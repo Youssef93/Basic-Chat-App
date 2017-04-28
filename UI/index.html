@@ -13,7 +13,7 @@
         }
 
         #mainWrapper{
-            display: none;
+            /*display: none;*/
         }
 
         #chatWrapper{
@@ -47,7 +47,7 @@
         input {
             height: 30px;
         }
-        
+
     </style>
 </head>
 <body>
@@ -71,9 +71,33 @@
                 </form>
             </div>
             <div id = "userWrapper">
-                <div id = "users"> </div>
+                <ul id = "users" style="list-style-type:disc">
+                    <li> Item1 </li>
+                    <li> Item2 </li>
+                </ul>
             </div>
         </div>
     </div>
+
+    <script src = "https://code.jquery.com/jquery-1.10.2.js"> </script>
+    <script src = "/socket.io/socket.io.js"> </script>
+    <script>
+        var socket = io.connect();
+        var $messageForm = $('#messageForm');
+        var $message = $('#message');
+        var $chat = $("#chatWindow");
+        var $usernameForm = $('#usernameForm');
+        var $username = $("#username");
+
+        $usernameForm.submit( e => {
+            e.preventDefault();
+            socket.emit('user login', $username.val());
+        });
+
+        socket.on('logged', data => {
+            console.log("in logged");
+            console.log(data);
+        });
+    </script>
 </body>
 </html>

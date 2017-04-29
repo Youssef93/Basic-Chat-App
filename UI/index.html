@@ -14,6 +14,7 @@
 
         #mainWrapper{
             display: none;
+            padding: 10px;
         }
 
         #chatWrapper{
@@ -53,7 +54,7 @@
 <body>
     <div id = "container">
         <div id = "namesWrapper">
-            <h2> ChatIo </h2>
+            <h2> Welcome to chat room. Please login. </h2>
             <p> Create UserName: </p>
             <form id = "usernameForm">
                 <input type = "text" size = "35" id = "username">
@@ -62,13 +63,16 @@
         </div>
 
         <div id = "mainWrapper">
-            <h2> ChatIO</h2>
+            <h2> Chat </h2>
             <div id = "chatWrapper">
                 <div id = "chatWindow"> </div>
                 <form id = "messageForm">
                     <input type = "text" size = "35" id = "message" placeholder="Welcome ...">
                     <input type = "submit" value = "Submit">
                 </form>
+            </div>
+            <div id = "accountNameViewer">
+                <h2> Text to be modified </h2>
             </div>
             <div id = "userWrapper">
                 <div id = "users" style="list-style-type:disc"> </div>
@@ -97,6 +101,8 @@
                 if(result.isLogged){
                     $('#mainWrapper').show();
                     $('#namesWrapper').hide();
+                    $('#accountNameViewer').text("Welcome " + result.userName);
+
                 } else {
                     window.alert(result.message);
                 }

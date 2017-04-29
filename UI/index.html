@@ -13,7 +13,7 @@
         }
 
         #mainWrapper{
-            /*display: none;*/
+            display: none;
         }
 
         #chatWrapper{
@@ -71,32 +71,50 @@
                 </form>
             </div>
             <div id = "userWrapper">
-                <ul id = "users" style="list-style-type:disc">
-                    <li> Item1 </li>
-                    <li> Item2 </li>
-                </ul>
+                <div id = "users" style="list-style-type:disc"> </div>
             </div>
         </div>
     </div>
 
-    <script src = "https://code.jquery.com/jquery-1.10.2.js"> </script>
-    <script src = "/socket.io/socket.io.js"> </script>
-    <script>
-        var socket = io.connect();
-        var $messageForm = $('#messageForm');
-        var $message = $('#message');
-        var $chat = $("#chatWindow");
-        var $usernameForm = $('#usernameForm');
-        var $username = $("#username");
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+        <script>
+        $(function(){
+            var socket = io.connect();
+            var $messageForm = $('#messageForm');
+            var $message = $('#message');
+            var $chat = $("#chatWindow");
+            var $usernameForm = $('#usernameForm');
+            var $username = $("#username");
+            var $usersBox = $('#users');
 
-        $usernameForm.submit( e => {
-            e.preventDefault();
-            socket.emit('user login', $username.val());
-        });
+            $usernameForm.submit( e => {
+                e.preventDefault();
+                socket.emit('user submission', $username.val());
+            });
 
-        socket.on('logged', data => {
-            console.log("in logged");
-            console.log(data);
+            socket.on('user login result', result => {
+                if(result.isLogged){
+                    $('#mainWrapper').show();
+                    $('#namesWrapper').hide();
+                } else {
+                    window.alert(result.message);
+                }
+            });
+
+            socket.on('update users', usernames => {
+                var html = "";
+                for(i = 0; i < usernames.length; i++){
+                    html += usernames[i]['userName'];
+                    if(usernames[i]['isOnline']){
+                        html += " - online";
+                    }
+
+                    html += '<br>';
+                }
+
+                $usersBox.html(html);
+            });
         });
     </script>
 </body>

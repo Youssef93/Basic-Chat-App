@@ -68,7 +68,26 @@ class Server {
 
     _updateNames() {
         return this.chatMongoClient.getAllUsers().then(users => {
-            io.sockets.emit('update users', users);
+            let onlineUsers = _.filter(users, function(user) {
+                return (user['isOnline'] == true);
+            });
+
+            let offlineUsers = _.filter(users, function(user) {
+                return (user['isOnline'] == false);
+            });
+
+            if(_.isNil(onlineUsers))
+                onlineUsers = [];
+
+            if(_.isNil(offlineUsers))
+                offlineUsers = [];
+
+            let allusers = {
+                onlineUsers,
+                offlineUsers
+            };
+
+            io.sockets.emit('update users', allusers);
             return users;
         });
     }

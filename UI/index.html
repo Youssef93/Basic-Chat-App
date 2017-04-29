@@ -4,17 +4,20 @@
     <title> Chat App </title>
     <style>
         #container{
+            /*display: none;*/
             width: 800px;
             margin: 0 auto;
         }
 
         #chatWindow{
+            /*display: none;*/
             height: 500px;
         }
 
         #mainWrapper{
             display: none;
             padding: 10px;
+            width: 800px;
         }
 
         #chatWrapper{
@@ -23,17 +26,46 @@
             border-radius: 10px;
             background: #f4f4f4;
             padding: 10px;
+            width: 500px;
         }
 
-        #userWrapper{
+        #accountNameViewer{
+            float: left;
+            width: 130px;
+            padding-left: 10px;
+        }
+
+        #offlineNameViewer{
+            float: left;
+            width: 130px;
+        }
+
+        #onlineUserWrapper{
             float: left;
             border: 1px #ccc solid;
             border-radius: 10px;
             background: #f4f4f4;
             padding: 10px;
-            margin-left: 20px;
-            width: 150px;
+            margin-left: 10px;
+            width: 100px;
             max-height: 200px;
+        }
+
+        #offlineUserWrapper{
+            float: left;
+            border: 1px #ccc solid;
+            border-radius: 10px;
+            background: #f4f4f4;
+            width: 100px;
+            max-height: 200px;
+            padding: 10px;
+            margin-left: 10px;
+        }
+
+        #chatButton{
+            float: left;
+            margin-left: 10px;
+            width: 130px;
         }
 
         #namesWrapper{
@@ -54,7 +86,7 @@
 <body>
     <div id = "container">
         <div id = "namesWrapper">
-            <h2> Welcome to chat room. Please login. </h2>
+            <h1> Welcome to chat room. Please login. </h1>
             <p> Create UserName: </p>
             <form id = "usernameForm">
                 <input type = "text" size = "35" id = "username">
@@ -74,9 +106,16 @@
             <div id = "accountNameViewer">
                 <h2> Text to be modified </h2>
             </div>
-            <div id = "userWrapper">
-                <div id = "users" style="list-style-type:disc"> </div>
+            <div id = "offlineNameViewer">
+                <h2> Offline Contacts </h2>
             </div>
+            <div id = "onlineUserWrapper">
+                <div id = "onlineUsers" style = "list-style-type:disc"> </div>
+            </div>
+            <div id = "offlineUserWrapper">
+                <div id = "offlineUsers" style = "list-style-type:disc"> </div>
+            </div>
+            <input type = "button" name = "chatButton" value = "Chat With" id = "chatButton"> </input>
         </div>
     </div>
 
@@ -85,12 +124,13 @@
         <script>
         $(function(){
             var socket = io.connect();
+            var userName;
             var $messageForm = $('#messageForm');
             var $message = $('#message');
             var $chat = $("#chatWindow");
             var $usernameForm = $('#usernameForm');
             var $username = $("#username");
-            var $usersBox = $('#users');
+            // var $usersBox = $('#users');
 
             $usernameForm.submit( e => {
                 e.preventDefault();
@@ -102,6 +142,8 @@
                     $('#mainWrapper').show();
                     $('#namesWrapper').hide();
                     $('#accountNameViewer').text("Welcome " + result.userName);
+                    $("#offlineNameViewer").text("Offline Contacts");
+                    userName = result.userName;
 
                 } else {
                     window.alert(result.message);
@@ -109,17 +151,31 @@
             });
 
             socket.on('update users', usernames => {
-                var html = "";
-                for(i = 0; i < usernames.length; i++){
-                    html += usernames[i]['userName'];
-                    if(usernames[i]['isOnline']){
-                        html += " - online";
+
+                $('input[type=radio][name=userRadioBtn]').remove();
+                $('#onlineUsers').html(" ");
+                $('#offlineUsers').html(" ");
+
+                onlineUsers = usernames.onlineUsers;
+                offlineUsers = usernames.offlineUsers;
+
+                for (i = 0; i < onlineUsers.length; i++) {
+                    if(onlineUsers[i]['userName'] == userName){
+                        continue;
                     }
 
-                    html += '<br>';
+                    var string = onlineUsers[i]['userName'];
+
+                    var radioBtn = $('<input type = "radio" name = userRadioBtn value = ' + string + '>' + string + '<br>');
+                    radioBtn.appendTo('#onlineUsers');
                 }
 
-                $usersBox.html(html);
+                var html = "";
+                for(i = 0; i < offlineUsers.length; i++){
+                    html += offlineUsers[i]['userName'] + "<br>";
+                }
+
+                $('#offlineUsers').html(html);
             });
         });
     </script>

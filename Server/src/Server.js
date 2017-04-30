@@ -61,14 +61,36 @@ class Server {
             });
 
             socket.on('disconnect', () => {
-                chatMongoClient.goOffline(socket.userName).then(result => {
+                chatMongoClient.removeSocketFromChat(socket.id).then(result => {
+                    if(result.isFound) {
+                        let user2SocketID = result['otherUserSocketID'];
+                        clients[user2SocketID].emit('userLeftChat');
+                    }
+
+                    return  true;
+                }).then(data => {
+                    return chatMongoClient.goOffline(socket.userName);
+                }).then(result => {
                     this._updateNames();
                 });
             });
 
             socket.on('initalizeChatFromClient', users => {
-                return chatMongoClient.getActiveSocketID(users.user2).then(socketID => {
-                    return clients[socketID].emit("initializeChatFromServer", users.user1);
+                return chatMongoClient.checkUserInChat(users.user2).then(result => {
+                    if(result) {
+                        socket.emit("chatInitalizedResult", {
+                            "user2": users.user2,
+                            "isAccepted": false,
+                            "message": users.user2 + " is already in another chat"
+                        });
+
+                        return null;
+                    } else {
+                        return chatMongoClient.getActiveSocketID(users.user2);
+                    }
+                }).then(socketID => {
+                    if(socketID != null)
+                        return clients[socketID].emit("initializeChatFromServer", users.user1);
                 }).catch(error => {
                     throw error;
                 });
@@ -76,7 +98,30 @@ class Server {
 
             socket.on("chatAcceptedVerification", data => {
                 chatMongoClient.getActiveSocketID(data.user1).then(socketID => {
-                    clients[socketID].emit("chatInitalizedResult", {"user2": data.user2, "isAccepted": data.isAccepted});
+                    let message = "";
+                    if(data.isAccepted) {
+                        message += data.user2 + " has accepted to chat with you";
+                        clients[socketID].emit("chatInitalizedResult", {
+                            "user2": data.user2,
+                            "isAccepted": data.isAccepted,
+                            "message": message
+                        });
+                        return chatMongoClient.startChat({
+                            "userName": data.user1,
+                            "socketID": socketID
+                        }, {
+                            "userName": data.user2,
+                            "socketID": socket.id
+                        });
+
+                    } else {
+                        message += data.user2 + " has refused to chat with you";
+                        clients[socketID].emit("chatInitalizedResult", {
+                            "user2": data.user2,
+                            "isAccepted": data.isAccepted,
+                            "message": message
+                        });
+                    }
                 });
             });
         });

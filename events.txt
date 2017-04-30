@@ -5,3 +5,4 @@ initalizeChatFromClient
 initializeChatFromServer
 chatAcceptedVerification
 chatInitalizedResult
+userLeftChat

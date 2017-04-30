@@ -4,9 +4,10 @@ let MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');
 
 class ChatMongo {
-    constructor(dbURL, usersCollection) {
+    constructor(dbURL, usersCollection, chatCollection) {
         this.dbURL = dbURL;
         this.usersCollectionName = usersCollection;
+        this.chatsCollectionName = chatCollection;
         this._initialize();
     }
 
@@ -63,19 +64,76 @@ class ChatMongo {
     }
 
     goOffline(userName) {
-        return this.usersCollection.updateOne({"userName": userName}, {$set: {"isOnline": false, "socketID": null}});
+        return this.usersCollection.updateOne({"userName": userName},{$set: {"isOnline": false, "socketID": null}});
     }
 
-    insertNewUser(user){
+    insertNewUser(user) {
         return this.usersCollection.insertOne(user);
     }
 
-    _initialize(){
+    checkUserInChat(user) {
+        return this.chatsCollection.find({$or: [{"user1": user} , {"user2": user}]}).toArray().then(result => {
+            if(result.length == 0)
+                return false;
+            else
+                return true;
+        });
+    }
+
+    checkSocketInChat(socketID) {
+        return this.chatsCollection.find({$or: [{"socketID1": socketID}, {"socketID2": socketID}]}).toArray().then(result => {
+            if(result.length == 0)
+                return false;
+            else
+                return true;
+        });
+    }
+
+    startChat(user1, user2) {
+        return this.chatsCollection.insertOne({
+            "user1": user1.userName,
+            "socketID1": user1.socketID,
+            "user2": user2.userName,
+            "socketID2": user2.socketID
+        });
+    }
+
+    removeSocketFromChat(socketID) {
+        let returnData = {};
+        return this.chatsCollection.find({$or: [{"socketID1": socketID}, {"socketID2": socketID}]}).toArray().then(result => {
+            if(result.length == 0) {
+                returnData['isFound'] = false;
+                return true;
+            } else {
+                returnData['isFound'] = true;
+                if(result[0]['socketID1'] == socketID) {
+                    returnData['otherUserName'] = result[0]['user2'];
+                    returnData['otherUserSocketID'] = result[0]['socketID2'];
+                } else {
+                    returnData['otherUserName'] = result[0]['user1'];
+                    returnData['otherUserSocketID'] = result[0]['socketID1'];
+                }
+
+                return this.chatsCollection.deleteOne({$or : [{"socketID1": socketID}, {"socketID2": socketID}]});
+            }
+        }).then(result => {
+            return returnData;
+        });
+    }
+
+    _initialize() {
+        let temp;
         MongoClient.connect(this.dbURL).then(db => {
             this.db = db;
+            temp = db;
             return db.collection(this.usersCollectionName);
         }).then(collection => {
             this.usersCollection = collection;
+            return true;
+        }).then(result => {
+            return temp.collection(this.chatsCollectionName);
+        }).then(collection => {
+            this.chatsCollection = collection;
         });
     }
 }

@@ -4,13 +4,11 @@
     <title> Chat App </title>
     <style>
         #container{
-            /*display: none;*/
             width: 800px;
             margin: 0 auto;
         }
 
         #chatWindow{
-            /*display: none;*/
             height: 500px;
         }
 
@@ -100,7 +98,7 @@
                 <div id = "chatWindow"> </div>
                 <form id = "messageForm">
                     <input type = "text" size = "35" id = "message" placeholder="Welcome ...">
-                    <input type = "submit" value = "Submit">
+                    <input type = "submit" value = "Submit" id = "sendButton" disabled>
                 </form>
             </div>
             <div id = "accountNameViewer">
@@ -166,6 +164,8 @@
                 var initializeChat;
                 if(window.confirm(user + " wants to chat with you. Do you accept?")) {
                     initializeChat = true;
+                    document.getElementById("sendButton").disabled = false;
+                    document.getElementById("chatButton").disabled = true;
                 } else {
                     initializeChat = false;
                 }
@@ -179,11 +179,17 @@
 
             socket.on("chatInitalizedResult", data => {
                 if(data.isAccepted) {
-                    window.alert(data.user2 + " accepted to chat with you");
-                    //Do sth in front end
-                } else {
-                    window.alert(data.user2 + " refused to chat with you");
+                    document.getElementById("sendButton").disabled = false;
+                    document.getElementById("chatButton").disabled = true;
                 }
+
+                window.alert(data.message);
+            });
+
+            socket.on('userLeftChat', () => {
+                window.alert("The other end has left the chat");
+                document.getElementById("sendButton").disabled = true;
+                document.getElementById("chatButton").disabled = false;
             });
 
             socket.on('update users', usernames => {

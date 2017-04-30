@@ -8,6 +8,7 @@ const _ = require('lodash');
 
 class Server {
     constructor(config, chatMongoClient) {
+        let clients = {};
         server.listen(config.portNumber);
         this.chatMongoClient = chatMongoClient;
 
@@ -16,14 +17,15 @@ class Server {
         });
 
         io.sockets.on('connection', socket => {
+            clients[socket.id] = socket;
             socket.on('user submission', userName => {
                 chatMongoClient.getUserByUserName(userName).then(data => {
                     if(!data.userFound){
                         socket['userName'] = userName;
-                        return chatMongoClient.insertNewUser({"userName": userName, "isOnline": true});
+                        return chatMongoClient.insertNewUser({"userName": userName, "isOnline": true, "socketID": socket.id});
                     } else if(!data.isOnline){
                         socket['userName'] = userName;
-                        return chatMongoClient.goOnline(userName);
+                        return chatMongoClient.goOnline(userName, socket.id);
                     } else {
                         return new Promise((resolve, reject) => {
                             let temp = {
@@ -63,16 +65,30 @@ class Server {
                     this._updateNames();
                 });
             });
+
+            socket.on('initalizeChatFromClient', users => {
+                return chatMongoClient.getActiveSocketID(users.user2).then(socketID => {
+                    return clients[socketID].emit("initializeChatFromServer", users.user1);
+                }).catch(error => {
+                    throw error;
+                });
+            });
+
+            socket.on("chatAcceptedVerification", data => {
+                chatMongoClient.getActiveSocketID(data.user1).then(socketID => {
+                    clients[socketID].emit("chatInitalizedResult", {"user2": data.user2, "isAccepted": data.isAccepted});
+                });
+            });
         });
     }
 
     _updateNames() {
         return this.chatMongoClient.getAllUsers().then(users => {
-            let onlineUsers = _.filter(users, function(user) {
+            let onlineUsers = _.filter(users, user => {
                 return (user['isOnline'] == true);
             });
 
-            let offlineUsers = _.filter(users, function(user) {
+            let offlineUsers = _.filter(users, user => {
                 return (user['isOnline'] == false);
             });
 

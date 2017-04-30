@@ -130,7 +130,19 @@
             var $chat = $("#chatWindow");
             var $usernameForm = $('#usernameForm');
             var $username = $("#username");
-            // var $usersBox = $('#users');
+            var $chatButton = $("#chatButton");
+
+            $chatButton.click(e => {
+                var choosenContact = $('input[name=userRadioBtn]:checked', '#onlineUsers').val()
+                if(choosenContact == null){
+                    window.alert("A Contact must be choosen from the online contacts");
+                } else {
+                    socket.emit('initalizeChatFromClient', {
+                        "user1": userName,
+                        "user2": choosenContact
+                    });
+                }
+            });
 
             $usernameForm.submit( e => {
                 e.preventDefault();
@@ -150,8 +162,31 @@
                 }
             });
 
-            socket.on('update users', usernames => {
+            socket.on("initializeChatFromServer", user => {
+                var initializeChat;
+                if(window.confirm(user + " wants to chat with you. Do you accept?")) {
+                    initializeChat = true;
+                } else {
+                    initializeChat = false;
+                }
 
+                socket.emit("chatAcceptedVerification", {
+                    "user1": user,
+                    "user2": userName,
+                    "isAccepted": initializeChat
+                });
+            });
+
+            socket.on("chatInitalizedResult", data => {
+                if(data.isAccepted) {
+                    window.alert(data.user2 + " accepted to chat with you");
+                    //Do sth in front end
+                } else {
+                    window.alert(data.user2 + " refused to chat with you");
+                }
+            });
+
+            socket.on('update users', usernames => {
                 $('input[type=radio][name=userRadioBtn]').remove();
                 $('#onlineUsers').html(" ");
                 $('#offlineUsers').html(" ");

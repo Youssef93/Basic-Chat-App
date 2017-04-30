@@ -1,3 +1,7 @@
 user submission --- user entered user name and pressed submit
 user login result --- result for pressing submit
 update users ---- update users displayed
+initalizeChatFromClient
+initializeChatFromServer
+chatAcceptedVerification
+chatInitalizedResult

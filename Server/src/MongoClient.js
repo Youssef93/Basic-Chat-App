@@ -4,27 +4,28 @@ let MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');
 
 class ChatMongo {
-    constructor(dbURL, usersCollection){
+    constructor(dbURL, usersCollection) {
         this.dbURL = dbURL;
         this.usersCollectionName = usersCollection;
         this._initialize();
     }
 
-    getUsersCollection(){
+    getUsersCollection() {
         return this.usersCollection;
     }
 
-    getDataBase(){
+    getDataBase() {
         return this.db;
     }
 
-    getUserByUserName(userName){
+    getUserByUserName(userName) {
         return this.usersCollection.findOne({"userName": userName}).then(result => {
             let returnData = {};
             if(result != null){
                 returnData['userFound'] = true;
                 returnData['userName'] = result['userName'];
                 returnData['isOnline'] = result['isOnline'];
+                returnData['socketID'] = result['socketID'];
             } else {
                 returnData['userFound'] = false;
             }
@@ -33,12 +34,13 @@ class ChatMongo {
         });
     }
 
-    getAllUsers(){
+    getAllUsers() {
         return this.usersCollection.find({}).toArray().then(allUsers => {
             let users = _.map(allUsers, user => {
                 return {
                     "userName": user.userName,
-                    "isOnline": user.isOnline
+                    "isOnline": user.isOnline,
+                    "socketID": user.socketID
                 }
             });
 
@@ -46,8 +48,14 @@ class ChatMongo {
         });
     }
 
-    goOnline(userName) {
-        return this.usersCollection.updateOne({"userName": userName}, {$set: {"isOnline": true}}).then(updateResult => {
+    getActiveSocketID(userName) {
+        return this.usersCollection.findOne({"userName": userName}).then(user => {
+            return user.socketID;
+        });
+    }
+
+    goOnline(userName, socketID) {
+        return this.usersCollection.updateOne({"userName": userName}, {$set: {"isOnline": true , "socketID": socketID }}).then(updateResult => {
             let result = {'ok' : 1};
             updateResult['result'] = result;
             return updateResult;
@@ -55,7 +63,7 @@ class ChatMongo {
     }
 
     goOffline(userName) {
-        return this.usersCollection.updateOne({"userName": userName}, {$set: {"isOnline": false}});
+        return this.usersCollection.updateOne({"userName": userName}, {$set: {"isOnline": false, "socketID": null}});
     }
 
     insertNewUser(user){

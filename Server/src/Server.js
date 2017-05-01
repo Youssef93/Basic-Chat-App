@@ -27,15 +27,11 @@ class Server {
                         socket['userName'] = userName;
                         return chatMongoClient.goOnline(userName, socket.id);
                     } else {
-                        return new Promise((resolve, reject) => {
-                            let temp = {
-                                "result" : {
-                                    "ok": 0
-                                }
-                            };
-
-                            resolve(temp);
-                        });
+                        return {
+                            "result": {
+                                "ok": 0
+                            }
+                        };
                     }
                 }).then(result => {
                     let temp ;
@@ -56,7 +52,7 @@ class Server {
                     socket.emit("user login result", temp);
                     return temp;
                 }).catch(error => {
-                    throw error;
+                    console.log(error);
                 });
             });
 
@@ -92,7 +88,14 @@ class Server {
                     if(socketID != null)
                         return clients[socketID].emit("initializeChatFromServer", users.user1);
                 }).catch(error => {
-                    throw error;
+                    console.log(error);
+                });
+            });
+
+            socket.on('send message', msg => {
+                chatMongoClient.getChat(socket.userName).then(result => {
+                    clients[result.socketID].emit('show message', msg);
+                    socket.emit('show message', msg);
                 });
             });
 
@@ -151,6 +154,12 @@ class Server {
             io.sockets.emit('update users', allusers);
             return users;
         });
+    }
+
+    _getChatHistoryName(user1, user2) {
+        let users = [user1, user2];
+        users.sort();
+        return users[0] + " - " + users[1];
     }
 }
 

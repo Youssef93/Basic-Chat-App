@@ -4,10 +4,11 @@ let MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');
 
 class ChatMongo {
-    constructor(dbURL, usersCollection, chatCollection) {
-        this.dbURL = dbURL;
-        this.usersCollectionName = usersCollection;
-        this.chatsCollectionName = chatCollection;
+    constructor(config) {
+        this.dbURL = config.dbURL;
+        this.usersCollectionName = config.usersCollection;
+        this.activeChatsCollectionName = config.activeChatsCollection;
+        this.historyChatsCollectionName = config.historyChatsCollection;
         this._initialize();
     }
 
@@ -72,7 +73,7 @@ class ChatMongo {
     }
 
     checkUserInChat(user) {
-        return this.chatsCollection.find({$or: [{"user1": user} , {"user2": user}]}).toArray().then(result => {
+        return this.activeChatsCollection.find({$or: [{"user1": user} , {"user2": user}]}).toArray().then(result => {
             if(result.length == 0)
                 return false;
             else
@@ -81,7 +82,7 @@ class ChatMongo {
     }
 
     checkSocketInChat(socketID) {
-        return this.chatsCollection.find({$or: [{"socketID1": socketID}, {"socketID2": socketID}]}).toArray().then(result => {
+        return this.activeChatsCollection.find({$or: [{"socketID1": socketID}, {"socketID2": socketID}]}).toArray().then(result => {
             if(result.length == 0)
                 return false;
             else
@@ -89,8 +90,26 @@ class ChatMongo {
         });
     }
 
+    getChat(userName) {
+        return this.activeChatsCollection.find({$or: [{"user1": userName}, {"user2": userName}]}).toArray().then(results => {
+            let otherUserName, otherUserSocketID;
+            let result = results[0];
+            if(result.user1 == userName ) {
+                otherUserName = result.user2;
+                otherUserSocketID = result.socketID2;
+            } else {
+                otherUserName = result.user1;
+                otherUserSocketID = result.socketID1;
+            }
+            return {
+                "userName": otherUserName,
+                "socketID": otherUserSocketID
+            }
+        });
+    }
+
     startChat(user1, user2) {
-        return this.chatsCollection.insertOne({
+        return this.activeChatsCollection.insertOne({
             "user1": user1.userName,
             "socketID1": user1.socketID,
             "user2": user2.userName,
@@ -100,7 +119,7 @@ class ChatMongo {
 
     removeSocketFromChat(socketID) {
         let returnData = {};
-        return this.chatsCollection.find({$or: [{"socketID1": socketID}, {"socketID2": socketID}]}).toArray().then(result => {
+        return this.activeChatsCollection.find({$or: [{"socketID1": socketID}, {"socketID2": socketID}]}).toArray().then(result => {
             if(result.length == 0) {
                 returnData['isFound'] = false;
                 return true;
@@ -114,11 +133,25 @@ class ChatMongo {
                     returnData['otherUserSocketID'] = result[0]['socketID1'];
                 }
 
-                return this.chatsCollection.deleteOne({$or : [{"socketID1": socketID}, {"socketID2": socketID}]});
+                return this.activeChatsCollection.deleteOne({$or : [{"socketID1": socketID}, {"socketID2": socketID}]});
             }
         }).then(result => {
             return returnData;
         });
+    }
+
+    loadChatHistory(chatHistoryName) {
+        return this.historyChatsCollection.find({"chatHistoryName": chatHistoryName}).toArray().then(result => {
+            if (result.length == 0) {
+                return "mafish";
+            } else {
+                result.history;
+            }
+        });
+    }
+
+    saveChatHistory(chatHistoryName, history) {
+        return this.historyChatsCollection.insertOne({"chatHistoryName": chatHistoryName, "history": history});
     }
 
     _initialize() {
@@ -131,9 +164,16 @@ class ChatMongo {
             this.usersCollection = collection;
             return true;
         }).then(result => {
-            return temp.collection(this.chatsCollectionName);
+            return temp.collection(this.activeChatsCollectionName);
         }).then(collection => {
-            this.chatsCollection = collection;
+            this.activeChatsCollection = collection;
+            return true;
+        }).then(result => {
+            return temp.collection(this.historyChatsCollectionName);
+        }).then(collection => {
+            this.historyChatsCollection = collection;
+        }).catch(error => {
+            console.log(error);
         });
     }
 }

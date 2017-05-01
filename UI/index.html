@@ -63,7 +63,7 @@
         #chatButton{
             float: left;
             margin-left: 10px;
-            width: 130px;
+            width: auto;
         }
 
         #namesWrapper{
@@ -73,6 +73,13 @@
             background: #f4f4f4;
             padding: 10px;
             margin-left: 20px;
+        }
+
+        #chattingUserViewer {
+            display: none;
+            float: left;
+            margin-left: 10px;
+            margin-top: 10px;
         }
 
         input {
@@ -113,7 +120,8 @@
             <div id = "offlineUserWrapper">
                 <div id = "offlineUsers" style = "list-style-type:disc"> </div>
             </div>
-            <input type = "button" name = "chatButton" value = "Chat With" id = "chatButton"> </input>
+            <input type = "button" name = "chatButton" value = "Press To Chat With an Online Contact" id = "chatButton"> </input>
+            <div id = "chattingUserViewer"> </div>
         </div>
     </div>
 
@@ -147,6 +155,13 @@
                 socket.emit('user submission', $username.val());
             });
 
+            $messageForm.submit(e => {
+                e.preventDefault();
+                var msg = userName + " - " + $("#message").val();
+                socket.emit('send message', msg);
+                $("#message").val('');
+            });
+
             socket.on('user login result', result => {
                 if(result.isLogged){
                     $('#mainWrapper').show();
@@ -166,6 +181,8 @@
                     initializeChat = true;
                     document.getElementById("sendButton").disabled = false;
                     document.getElementById("chatButton").disabled = true;
+                    $("#chattingUserViewer").show();
+                    $("#chattingUserViewer").html("You are now chatting with " + user);
                 } else {
                     initializeChat = false;
                 }
@@ -181,6 +198,8 @@
                 if(data.isAccepted) {
                     document.getElementById("sendButton").disabled = false;
                     document.getElementById("chatButton").disabled = true;
+                    $("#chattingUserViewer").show();
+                    $("#chattingUserViewer").html("You are now chatting with " + data.user2);
                 }
 
                 window.alert(data.message);
@@ -190,6 +209,8 @@
                 window.alert("The other end has left the chat");
                 document.getElementById("sendButton").disabled = true;
                 document.getElementById("chatButton").disabled = false;
+                $("#chatWindow").html(" ");
+                $("#chattingUserViewer").hide();
             });
 
             socket.on('update users', usernames => {
@@ -217,6 +238,10 @@
                 }
 
                 $('#offlineUsers').html(html);
+            });
+
+            socket.on('show message', msg => {
+                $("#chatWindow").append(msg + "<br>");
             });
         });
     </script>

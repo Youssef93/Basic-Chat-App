@@ -6,3 +6,12 @@ initializeChatFromServer
 chatAcceptedVerification
 chatInitalizedResult
 userLeftChat
+send message
+show message
+
+
+
+requestChatFromClient
+requestChatFromServer
+chatAcceptedVerification
+initialzeChat

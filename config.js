@@ -3,5 +3,6 @@ module.exports = {
     "uiDirectory": __dirname + "/UI/index.html",
     "dbURL": "mongodb://localhost:27017/chatapp",
     "usersCollection": "usersCollection",
-    "chatsCollection": "chatsCollection",
+    "activeChatsCollection": "activeChatsCollection",
+    "historyChatsCollection": "historyChatsCollection"
 }

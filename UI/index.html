@@ -143,7 +143,7 @@
                 if(choosenContact == null){
                     window.alert("A Contact must be choosen from the online contacts");
                 } else {
-                    socket.emit('initalizeChatFromClient', {
+                    socket.emit('requestChatFromClient', {
                         "user1": userName,
                         "user2": choosenContact
                     });
@@ -175,14 +175,10 @@
                 }
             });
 
-            socket.on("initializeChatFromServer", user => {
+            socket.on("requestChatFromServer", user => {
                 var initializeChat;
                 if(window.confirm(user + " wants to chat with you. Do you accept?")) {
                     initializeChat = true;
-                    document.getElementById("sendButton").disabled = false;
-                    document.getElementById("chatButton").disabled = true;
-                    $("#chattingUserViewer").show();
-                    $("#chattingUserViewer").html("You are now chatting with " + user);
                 } else {
                     initializeChat = false;
                 }
@@ -194,18 +190,25 @@
                 });
             });
 
-            socket.on("chatInitalizedResult", data => {
+            socket.on("initializeChat", data => {
                 if(data.isAccepted) {
                     document.getElementById("sendButton").disabled = false;
                     document.getElementById("chatButton").disabled = true;
                     $("#chattingUserViewer").show();
-                    $("#chattingUserViewer").html("You are now chatting with " + data.user2);
+                    $("#chattingUserViewer").html("You are now chatting with " + data.otherUser);
+                    $("#chatWindow").append(data.history);
                 }
 
                 window.alert(data.message);
             });
 
-            socket.on('userLeftChat', () => {
+            socket.on('userLeftChat', data => {
+                socket.emit("save chat", {
+                    "user1": userName,
+                    "user2": data.userName,
+                    "history": $("#chatWindow").html()
+                });
+
                 window.alert("The other end has left the chat");
                 document.getElementById("sendButton").disabled = true;
                 document.getElementById("chatButton").disabled = false;

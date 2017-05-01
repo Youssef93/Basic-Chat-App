@@ -60,7 +60,7 @@ class Server {
                 chatMongoClient.removeSocketFromChat(socket.id).then(result => {
                     if(result.isFound) {
                         let user2SocketID = result['otherUserSocketID'];
-                        clients[user2SocketID].emit('userLeftChat');
+                        clients[user2SocketID].emit('userLeftChat', {"userName": socket.userName, "socketID": socket.id});
                     }
 
                     return  true;
@@ -71,11 +71,17 @@ class Server {
                 });
             });
 
-            socket.on('initalizeChatFromClient', users => {
+            socket.on('save chat', data => {
+                console.log(data.history);
+                let chatHistoryName = this._getChatHistoryName(data.user1, data.user2);
+                chatMongoClient.saveChatHistory(chatHistoryName, data.history);
+            });
+
+            socket.on('requestChatFromClient', users => {
                 return chatMongoClient.checkUserInChat(users.user2).then(result => {
                     if(result) {
-                        socket.emit("chatInitalizedResult", {
-                            "user2": users.user2,
+                        socket.emit("initializeChat", {
+                            "otherUser": users.user2,
                             "isAccepted": false,
                             "message": users.user2 + " is already in another chat"
                         });
@@ -86,7 +92,7 @@ class Server {
                     }
                 }).then(socketID => {
                     if(socketID != null)
-                        return clients[socketID].emit("initializeChatFromServer", users.user1);
+                        return clients[socketID].emit("requestChatFromServer", users.user1);
                 }).catch(error => {
                     console.log(error);
                 });
@@ -100,15 +106,27 @@ class Server {
             });
 
             socket.on("chatAcceptedVerification", data => {
-                chatMongoClient.getActiveSocketID(data.user1).then(socketID => {
-                    let message = "";
-                    if(data.isAccepted) {
-                        message += data.user2 + " has accepted to chat with you";
-                        clients[socketID].emit("chatInitalizedResult", {
-                            "user2": data.user2,
+                if(data.isAccepted){
+                    let chatHistory ;
+                    return chatMongoClient.loadChatHistory(this._getChatHistoryName(data.user1, data.user2)).then(history => {
+                        chatHistory = history;
+                        return chatMongoClient.getActiveSocketID(data.user1);
+                    }).then(socketID => {
+                        let message = data.user2 + " has accepted to chat with you";
+                        clients[socketID].emit("initializeChat", {
+                            "otherUser": data.user2,
                             "isAccepted": data.isAccepted,
-                            "message": message
+                            "message": message,
+                            "history": chatHistory
                         });
+
+                        socket.emit("initializeChat", {
+                            "otherUser": data.user1,
+                            "isAccepted": data.isAccepted,
+                            "message": "You are now chatting with " + data.user1,
+                            "history": chatHistory
+                        });
+
                         return chatMongoClient.startChat({
                             "userName": data.user1,
                             "socketID": socketID
@@ -116,16 +134,20 @@ class Server {
                             "userName": data.user2,
                             "socketID": socket.id
                         });
+                    }).catch(error => {
+                        console.log(error);
+                    });
 
-                    } else {
+                } else {
+                    return chatMongoClient.getActiveSocketID(data.user1).then(socketID => {
                         message += data.user2 + " has refused to chat with you";
-                        clients[socketID].emit("chatInitalizedResult", {
-                            "user2": data.user2,
+                        clients[socketID].emit("initializeChat", {
+                            "otherUser": data.user2,
                             "isAccepted": data.isAccepted,
                             "message": message
                         });
-                    }
-                });
+                    });
+                }
             });
         });
     }

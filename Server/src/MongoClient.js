@@ -143,15 +143,22 @@ class ChatMongo {
     loadChatHistory(chatHistoryName) {
         return this.historyChatsCollection.find({"chatHistoryName": chatHistoryName}).toArray().then(result => {
             if (result.length == 0) {
-                return "mafish";
+                return "";
             } else {
-                result.history;
+                return result[0].history;
             }
         });
     }
 
     saveChatHistory(chatHistoryName, history) {
-        return this.historyChatsCollection.insertOne({"chatHistoryName": chatHistoryName, "history": history});
+        return this.historyChatsCollection.find({"chatHistoryName": chatHistoryName}).toArray().then(result => {
+            if(result.length == 0) {
+                return this.historyChatsCollection.insertOne({"chatHistoryName": chatHistoryName, "history": history});
+            } else {
+                return this.historyChatsCollection.updateOne({"chatHistoryName": chatHistoryName}, {$set: {"history": history}});
+            }
+        });
+
     }
 
     _initialize() {

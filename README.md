@@ -18,9 +18,10 @@ npm install
 sudo service mongodb start
 ```
     4-If you dont have mongodb service installed, try this tutorial
+    
     https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-16-04
     
-    5- Type
+    5- Start the server by typing 
 ```sh
 node ControlUnit.js
 ```

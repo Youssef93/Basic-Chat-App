@@ -13,21 +13,23 @@
 ```sh
 npm install
 ```
-    3- Make sure mongoDB service is running by typing
+    3- Make sure mongoDB service is running by typing.
 ```sh
 sudo service mongodb start
 ```
-
-    4- Type
+    4-If you dont have mongodb service installed, try this tutorial
+    https://www.digitalocean.com/community/tutorials/how-to-install-mongodb-on-ubuntu-16-04
+    
+    5- Type
 ```sh
 node ControlUnit.js
 ```
-    5- Go to http://localhost:[PORTNUMBER] where default port Number is 5000 unless you've changed it through config.js
-    6- Enter a user name, this will view the chatting page which has two lists; first list for online contacts and the second for offline.
-    7- Open another tab and go to http://localhost:[PORTNUMBER] and create another user. Now you'll see that the online users appear in both tabs.
-    8- If you close the tab it'll automatically make the contact go offline and appear in the offline list.
-    9- To start a chat, choose an online user and click the chat button; at which point the browser will ask the other user if he wants to chat. If he agrees you can start chatting where the messages appear on both users windows.
-    10- If you close the chat and open it again you'll see the previous chat history.
+    6- Go to http://localhost:[PORTNUMBER] where default port Number is 5000 unless you've changed it through config.js
+    7- Enter a user name, this will view the chatting page which has two lists; first list for online contacts and the second for offline.
+    8- Open another tab and go to http://localhost:[PORTNUMBER] and create another user. Now you'll see that the online users appear in both tabs.
+    9- If you close the tab it'll automatically make the contact go offline and appear in the offline list.
+    10- To start a chat, choose an online user and click the chat button; at which point the browser will ask the other user if he wants to chat. If he agrees you can start chatting where the messages appear on both users windows.
+    11- If you close the chat and open it again you'll see the previous chat history.
 
 # Automatic Precautions Implemented:
     1- Usernames cannot be duplicated.

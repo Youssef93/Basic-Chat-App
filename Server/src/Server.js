@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 let app = require("express")();
 let server = require('http').createServer(app);
@@ -72,7 +72,6 @@ class Server {
             });
 
             socket.on('save chat', data => {
-                console.log(data.history);
                 let chatHistoryName = this._getChatHistoryName(data.user1, data.user2);
                 chatMongoClient.saveChatHistory(chatHistoryName, data.history);
             });

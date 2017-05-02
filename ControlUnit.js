@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 let Server = require('./Server/src/Server.js');
 let MongoClient = require('./Server/src/MongoClient.js');

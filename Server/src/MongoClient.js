@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 let MongoClient = require('mongodb').MongoClient;
 const _ = require('lodash');

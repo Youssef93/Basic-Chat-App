@@ -2,7 +2,7 @@
 
 # Notes:
     1- I have no experience in front-end development, so the front end code may not be that good.
-    2- Please make sure you have a wroking mongodb driver at port 27013.
+    2- Please make sure you have a wroking mongodb driver at port 27017.
     3- There'a configuration file (config.js) in the repo. If you want to change any port number you can change it through this file without affecting the rest of the code.
     4- Node version > 6.
     5- This is a very basic chat/login app. It won't be effective against very large data.
@@ -29,7 +29,7 @@ node ControlUnit.js
     9- To start a chat, choose an online user and click the chat button; at which point the browser will ask the other user if he wants to chat. If he agrees you can start chatting where the messages appear on both users windows.
     10- If you close the chat and open it again you'll see the previous chat history.
 
-# Precautions made:
+# Automatic Precautions Implemented:
     1- Usernames cannot be duplicated.
     2- Existing usernames in database cannot be used while they're online.
     3- You cannot start a chat with another contact who's already in a chat with a third contact.

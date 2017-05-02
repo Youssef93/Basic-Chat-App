@@ -8,7 +8,7 @@
     5- This is a very basic chat/login app. It won't be effective against very large data.
 
 # Instructions:
-    1- Clone this repo to you computer locally.
+    1- Clone this repo to your computer locally.
     2- Open Terminal and type
 ```sh
 npm install
